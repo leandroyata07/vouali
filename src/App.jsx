@@ -4,6 +4,7 @@ import LocationCard from './components/LocationCard';
 import DestinationSelector from './components/DestinationSelector';
 import NavigationDashboard from './components/NavigationDashboard';
 import RouteMap from './components/RouteMap';
+import Footer from './components/Footer';
 
 
 
@@ -302,6 +303,7 @@ export default function App() {
           />
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
