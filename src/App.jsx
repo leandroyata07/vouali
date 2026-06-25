@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import LocationCard from './components/LocationCard';
 import DestinationSelector from './components/DestinationSelector';
@@ -10,7 +10,7 @@ import Footer from './components/Footer';
 
 const getHaversineDistance = (coords1, coords2) => {
   if (!coords1 || !coords2) return null;
-  const R = 6371; // Raio da Terra em km
+  const R = 6371;
   const dLat = ((coords2.lat - coords1.lat) * Math.PI) / 180;
   const dLon = ((coords2.lng - coords1.lng) * Math.PI) / 180;
   const a =
@@ -210,6 +210,9 @@ export default function App() {
     }
   };
 
+  const lastRouteCoords = useRef(null);
+  const lastDestCoords = useRef(null);
+
   useEffect(() => {
     const updateRoute = async () => {
       if (currentCoords && destinationCoords) {
@@ -217,6 +220,18 @@ export default function App() {
         const bear = getBearing(currentCoords, destinationCoords);
         setDistance(straightDist);
         setBearing(bear);
+
+        const isSameDest = lastDestCoords.current &&
+          lastDestCoords.current.lat === destinationCoords.lat &&
+          lastDestCoords.current.lng === destinationCoords.lng;
+
+        const distMoved = lastRouteCoords.current
+          ? getHaversineDistance(currentCoords, lastRouteCoords.current)
+          : null;
+
+        if (isSameDest && distMoved !== null && distMoved < 0.01) {
+          return;
+        }
 
         setRouteLoading(true);
         const routeData = await fetchOSRMRoute(currentCoords, destinationCoords);
@@ -226,6 +241,8 @@ export default function App() {
           setRouteGeometry(routeData.points);
           setRouteDistance(routeData.distance);
           setRouteDuration(routeData.duration);
+          lastRouteCoords.current = currentCoords;
+          lastDestCoords.current = destinationCoords;
         } else {
           setRouteGeometry([[currentCoords.lat, currentCoords.lng], [destinationCoords.lat, destinationCoords.lng]]);
           setRouteDistance(straightDist);

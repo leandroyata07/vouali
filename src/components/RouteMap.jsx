@@ -41,19 +41,34 @@ const destinationIcon = L.divIcon({
 
 function MapController({ currentCoords, destinationCoords, routeGeometry, fitTrigger }) {
   const map = useMap();
+  const lastDestRef = React.useRef(null);
+  const lastFitTriggerRef = React.useRef(fitTrigger);
 
   React.useEffect(() => {
-    if (routeGeometry && routeGeometry.length > 0) {
-      const bounds = L.latLngBounds(routeGeometry);
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-    } else if (currentCoords && destinationCoords) {
-      const bounds = L.latLngBounds([
-        [currentCoords.lat, currentCoords.lng],
-        [destinationCoords.lat, destinationCoords.lng]
-      ]);
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-    } else if (currentCoords) {
-      map.setView([currentCoords.lat, currentCoords.lng], 13);
+    const hasDestChanged = !lastDestRef.current ||
+      lastDestRef.current.lat !== destinationCoords?.lat ||
+      lastDestRef.current.lng !== destinationCoords?.lng;
+
+    const hasFitTriggered = fitTrigger !== lastFitTriggerRef.current;
+
+    if (hasDestChanged || hasFitTriggered) {
+      if (routeGeometry && routeGeometry.length > 0) {
+        const bounds = L.latLngBounds(routeGeometry);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      } else if (currentCoords && destinationCoords) {
+        const bounds = L.latLngBounds([
+          [currentCoords.lat, currentCoords.lng],
+          [destinationCoords.lat, destinationCoords.lng]
+        ]);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      } else if (currentCoords) {
+        map.setView([currentCoords.lat, currentCoords.lng], 13);
+      }
+
+      if (destinationCoords) {
+        lastDestRef.current = destinationCoords;
+      }
+      lastFitTriggerRef.current = fitTrigger;
     }
   }, [currentCoords, destinationCoords, routeGeometry, fitTrigger, map]);
 
